@@ -1,0 +1,36 @@
+{
+  "render": [
+    {"label": "A:min7/b3", "expected": "Am7/C"},
+    {"label": "B:hdim7", "expected": "Bm7b5"},
+    {"label": "C:minmaj7", "expected": "CmMaj7"},
+    {"label": "A#:maj7", "prefer_flats": true, "expected": "Bbmaj7"},
+    {"label": "D:7/3", "prefer_flats": true, "expected": "D7/F#"},
+    {"label": "G:maj/3", "capo": 2, "expected": "F/A"},
+    {"label": "C:maj", "transpose": -1, "prefer_flats": true, "expected": "B"},
+    {"label": "N", "transpose": 4, "expected": "N.C."},
+    {"label": "C:maj7/3", "simplify": true, "expected": "C"},
+    {"label": "B:hdim7", "simplify": true, "expected": "Bdim"},
+    {"label": "D:sus4", "simplify": true, "expected": "D"},
+    {"label": "A#:maj", "tonic": "C", "expected": "Bb"},
+    {"label": "D#:maj/3", "tonic": "C", "expected": "Eb/G"},
+    {"label": "D#:min", "tonic": "E", "expected": "D#m"},
+    {"label": "B:maj", "tonic": "Gb", "expected": "B"},
+    {"label": "D:7/3", "transpose": 1, "tonic": "G#", "expected": "D#7/G"},
+    {"label": "C:min7", "capo": 2, "tonic": "F", "expected": "Bbm7"}
+  ],
+  "notes": [
+    {"label": "C:min7", "expected": ["C", "Eb", "G", "Bb"]},
+    {"label": "A#:maj", "tonic": "C", "expected": ["Bb", "D", "F"]},
+    {"label": "D:7", "tonic": "G", "expected": ["D", "F#", "A", "C"]}
+  ],
+  "key_spelling": [
+    {"key": "C:maj", "transpose": 1, "expected": "Db"},
+    {"key": "G:min", "transpose": 0, "expected": "G"},
+    {"key": "G:maj", "transpose": 3, "expected": "Bb"},
+    {"key": "E:min", "transpose": 0, "expected": "E"}
+  ],
+  "format_key": [
+    {"key": "A#:maj", "transpose": 0, "expected": "Bb major"},
+    {"key": "G:min", "transpose": 1, "expected": "G# minor"}
+  ]
+}
