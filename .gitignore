@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# App data & model weights
+server/data/
+server/engine/weights/
+*.db
+*.wav
+*.mp3
+*.m4a
+*.webm
+
+# Node
+node_modules/
+client/dist/
+
+# Env / OS / editor
+.env
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
