@@ -1,0 +1,60 @@
+import { useEffect, useRef, useState } from 'react'
+import { PX_PER_SECOND, laneOffset } from '../sync'
+import type { Segment } from '../types'
+
+interface Props {
+  segments: Segment[]
+  symbols: string[]
+  beats: number[]
+  downbeats: number[]
+  duration: number
+  time: number
+  editMode: boolean
+  onSeek(t: number): void
+  onEdit(index: number): void
+  width?: number
+}
+
+export function ChordLane({ segments, symbols, beats, downbeats, duration, time, editMode, onSeek, onEdit, width }: Props) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [measured, setMeasured] = useState(800)
+
+  useEffect(() => {
+    if (width !== undefined) return
+    const el = ref.current
+    if (!el) return
+    const update = () => setMeasured(el.clientWidth || 800)
+    update()
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null
+    observer?.observe(el)
+    return () => observer?.disconnect()
+  }, [width])
+
+  const offset = laneOffset(time, width ?? measured)
+  return (
+    <div className="lane" ref={ref} aria-label="Chord timeline">
+      <div className="lane-playhead" />
+      <div className="lane-track" data-testid="lane-track"
+        style={{ transform: `translateX(${offset}px)`, width: duration * PX_PER_SECOND }}>
+        {beats.map((b) => <span key={`b${b}`} className="beat-tick" style={{ left: b * PX_PER_SECOND }} />)}
+        {downbeats.map((d) => <span key={`d${d}`} className="bar-line" style={{ left: d * PX_PER_SECOND }} />)}
+        {segments.map((s, i) => {
+          if (s.label === 'N') return null
+          const classes = ['chip']
+          if (s.end <= time) classes.push('past')
+          if (s.start <= time && time < s.end) classes.push('active')
+          if (s.confidence < 0.5) classes.push('low')
+          if (s.edited) classes.push('edited')
+          return (
+            <button key={i} type="button" className={classes.join(' ')}
+              style={{ left: s.start * PX_PER_SECOND, width: Math.max((s.end - s.start) * PX_PER_SECOND - 4, 28) }}
+              title={editMode ? 'Edit this chord' : 'Jump here'}
+              onClick={() => (editMode ? onEdit(i) : onSeek(s.start))}>
+              {symbols[i]}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
