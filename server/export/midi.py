@@ -16,7 +16,9 @@ def to_midi(timeline: dict, opts: ExportOptions) -> bytes:
     mid = mido.MidiFile(ticks_per_beat=TICKS_PER_BEAT)
     track = mido.MidiTrack()
     mid.tracks.append(track)
-    track.append(mido.MetaMessage("track_name", name=timeline["title"], time=0))
+    # MIDI meta text is latin-1; non-Latin titles (Sinhala, CJK, emoji) become "?".
+    name = timeline["title"].encode("latin-1", "replace").decode("latin-1")
+    track.append(mido.MetaMessage("track_name", name=name, time=0))
     track.append(mido.MetaMessage("set_tempo", tempo=tempo, time=0))
 
     def tick(seconds: float) -> int:

@@ -46,6 +46,11 @@ def test_midi_first_chord_and_transpose(timeline):
     assert first_chord_notes(to_midi(timeline, ExportOptions(capo=5))) == {36, 60, 63, 67, 70}
 
 
+def test_midi_accepts_non_latin_titles(timeline):
+    timeline["title"] = "ගීතය 曲 🎸"
+    assert first_chord_notes(to_midi(timeline, ExportOptions())) == {36, 60, 63, 67, 70}
+
+
 def test_midi_tempo_and_length(timeline):
     mid = mido.MidiFile(file=BytesIO(to_midi(timeline, ExportOptions())))
     tempos = [m.tempo for m in mid.tracks[0] if m.type == "set_tempo"]
