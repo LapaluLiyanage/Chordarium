@@ -74,6 +74,11 @@ class Store:
         row = self._exec("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
         return dict(row) if row else None
 
+    def get_active_job(self, video_id: str) -> dict | None:
+        row = self._exec(f"SELECT * FROM jobs WHERE video_id = ? AND state NOT IN {FINAL_STATES} "
+                         "ORDER BY created_at DESC LIMIT 1", (video_id,)).fetchone()
+        return dict(row) if row else None
+
     def fail_interrupted_jobs(self) -> int:
         cur = self._exec("UPDATE jobs SET state = 'failed', error = 'The server restarted during analysis.' "
                          f"WHERE state NOT IN {FINAL_STATES}")

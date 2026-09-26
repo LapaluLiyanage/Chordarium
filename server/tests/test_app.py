@@ -46,6 +46,14 @@ def test_analyze_starts_job_then_polls(ctx):
     assert client.post("/api/jobs/nope/cancel").status_code == 404
 
 
+def test_analyze_twice_reuses_running_job(ctx):
+    client, _, runner = ctx
+    first = client.post("/api/analyze", json={"url": f"https://youtu.be/{VID}"}).get_json()["job_id"]
+    r = client.post("/api/analyze", json={"url": f"https://www.youtube.com/watch?v={VID}"})
+    assert r.status_code == 202 and r.get_json() == {"job_id": first}
+    assert len(runner.submitted) == 1
+
+
 def test_analyze_returns_cached_song(ctx, timeline):
     client, store, runner = ctx
     timeline["video_id"] = VID

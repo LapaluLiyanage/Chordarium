@@ -78,6 +78,9 @@ def create_app(config: dict | None = None, store: Store | None = None, runner=No
         cached = store.get_song_by_video(video_id)
         if cached:
             return jsonify({"song_id": cached["id"], "cached": True})
+        active = store.get_active_job(video_id)
+        if active:
+            return jsonify({"job_id": active["id"]}), 202
         return jsonify({"job_id": runner.submit(video_id, mode)}), 202
 
     @app.get("/api/jobs/<job_id>")

@@ -33,6 +33,14 @@ def test_fail_interrupted_jobs(store):
     assert store.get_job(done)["state"] == "done"
 
 
+def test_get_active_job(store):
+    assert store.get_active_job("abcdefghijk") is None
+    job_id = store.create_job("abcdefghijk", "fast")
+    assert store.get_active_job("abcdefghijk")["id"] == job_id
+    store.update_job(job_id, state="failed")
+    assert store.get_active_job("abcdefghijk") is None
+
+
 def test_save_is_upsert_by_video(store, timeline):
     first = store.save_song(timeline)
     timeline["title"] = "Renamed"
