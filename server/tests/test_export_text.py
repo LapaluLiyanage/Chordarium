@@ -22,6 +22,15 @@ def test_transpose_capo_simplify(timeline):
     assert bars[0][0] == "C#m7" and bars[3][0] == "D#7/G"
 
 
+def test_borrowed_chords_use_flats_in_sharp_keys(timeline):
+    timeline["key"] = "C:maj"
+    timeline["segments"][0]["label"] = "A#:maj"
+    timeline["segments"][1]["label"] = "D#:maj/3"
+    bars = build_bars(timeline, ExportOptions())
+    assert bars[0][0] == "Bb" and bars[1][0] == "Eb/G"
+    assert dict(chord_legend(timeline, ExportOptions()))["Bb"] == ["Bb", "D", "F"]
+
+
 def test_leading_and_trailing_silence_trimmed(timeline):
     timeline["duration"] = 12.0
     timeline["beats"] = [i * 0.5 for i in range(24)]

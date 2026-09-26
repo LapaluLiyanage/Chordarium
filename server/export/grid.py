@@ -20,8 +20,8 @@ def _shape_shift(opts: ExportOptions) -> int:
     return opts.transpose - opts.capo
 
 
-def _prefer_flats(timeline: dict, opts: ExportOptions) -> bool:
-    return ch.key_prefers_flats(timeline["key"], _shape_shift(opts))
+def _tonic(timeline: dict, opts: ExportOptions) -> str:
+    return ch.key_spelling(timeline["key"], _shape_shift(opts))
 
 
 def _label_at(segments: list[dict], starts: list[float], t: float) -> str:
@@ -38,7 +38,7 @@ def build_bars(timeline: dict, opts: ExportOptions) -> list[list[str]]:
         return []
     segments = timeline["segments"]
     starts = [s["start"] for s in segments]
-    flats = _prefer_flats(timeline, opts)
+    tonic = _tonic(timeline, opts)
     bounds = list(downbeats) + [timeline["duration"]]
     bars, prev = [], None
     for i in range(len(downbeats)):
@@ -47,7 +47,7 @@ def build_bars(timeline: dict, opts: ExportOptions) -> list[list[str]]:
         slots = []
         for j, beat in enumerate(bar_beats):
             symbol = ch.render(_label_at(segments, starts, beat + 0.01), transpose_by=opts.transpose,
-                               capo=opts.capo, simplify_chord=opts.simplify, prefer_flats=flats)
+                               capo=opts.capo, simplify_chord=opts.simplify, tonic=tonic)
             slots.append(symbol if j == 0 or symbol != prev else HOLD)
             prev = symbol
         bars.append(slots)
@@ -71,7 +71,7 @@ def grid_lines(bars: list[list[str]], per_row: int) -> list[str]:
 
 
 def chord_legend(timeline: dict, opts: ExportOptions) -> list[tuple[str, list[str]]]:
-    flats = _prefer_flats(timeline, opts)
+    tonic = _tonic(timeline, opts)
     seen: dict[str, list[str]] = {}
     for seg in timeline["segments"]:
         c = ch.parse(seg["label"])
@@ -80,9 +80,9 @@ def chord_legend(timeline: dict, opts: ExportOptions) -> list[tuple[str, list[st
         if opts.simplify:
             c = ch.simplify(c)
         c = ch.transpose(c, _shape_shift(opts))
-        symbol = ch.format_symbol(c, flats)
+        symbol = ch.format_symbol(c, tonic=tonic)
         if symbol not in seen:
-            seen[symbol] = ch.note_names(c, flats)
+            seen[symbol] = ch.note_names(c, tonic=tonic)
     return list(seen.items())
 
 

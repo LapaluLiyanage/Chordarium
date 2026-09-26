@@ -42,6 +42,19 @@ def test_format_flats_and_letter_spelled_bass():
     assert ch.format_symbol(ch.parse("A#:maj/3"), prefer_flats=True) == "Bb/D"
 
 
+def test_roots_spelled_by_key_degree():
+    assert ch.key_spelling("C:maj") == "C"
+    assert ch.key_spelling("G:min") == "G"
+    assert ch.key_spelling("C:maj", 1) == "Db"
+    assert ch.render("A#:maj", tonic="C") == "Bb"
+    assert ch.render("D#:maj/3", tonic="C") == "Eb/G"
+    assert ch.render("G#:maj", tonic="C") == "Ab"
+    assert ch.render("D#:min", tonic="E") == "D#m"
+    assert ch.render("F#:7", tonic="G") == "F#7"
+    assert ch.render("B:maj", tonic="Gb") == "B"
+    assert ch.note_names(ch.parse("A#:maj"), tonic="C") == ["Bb", "D", "F"]
+
+
 def test_transpose_wraps_and_moves_bass():
     assert ch.transpose(ch.parse("B:maj"), 2) == Chord(1, "maj")
     assert ch.transpose(ch.parse("G:maj/3"), 5) == Chord(0, "maj", 4)

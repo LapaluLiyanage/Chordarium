@@ -39,6 +39,9 @@ _INTERVAL_TO_DEGREE = {
 }
 _INTERVAL_LETTER_STEPS = {0: 0, 1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 9: 5, 10: 6, 11: 6}
 _ACCIDENTALS = {-1: "b", 0: "", 1: "#"}
+# Letter offset for each semitone above the tonic: b2, b3, #4, b6, b7 (borrowed chords read as flats).
+_KEY_DEGREE_LETTER_STEPS = {0: 0, 1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 3, 7: 4, 8: 5, 9: 5, 10: 6, 11: 6}
+_AWKWARD_NAMES = {"Cb", "Fb", "E#", "B#"}
 _FLAT_MAJOR_ROOTS = {5, 10, 3, 8, 1}
 _FLAT_MINOR_ROOTS = {2, 7, 0, 5, 10, 3}
 
@@ -98,18 +101,33 @@ def spell(root: str, interval: int) -> str:
     return (FLATS if "b" in root else SHARPS)[target]
 
 
-def format_symbol(chord: Chord | None, prefer_flats: bool = False) -> str:
+def root_name_in_key(pc: int, tonic: str) -> str:
+    """Name a chord root by its scale degree in the key whose tonic is `tonic`."""
+    degree = (pc - _NAME_TO_PC[tonic]) % 12
+    letter = LETTERS[(LETTERS.index(tonic[0]) + _KEY_DEGREE_LETTER_STEPS[degree]) % 7]
+    diff = (pc % 12 - _NATURAL_PC[letter] + 6) % 12 - 6
+    name = letter + _ACCIDENTALS[diff] if diff in _ACCIDENTALS else None
+    if name is None or name in _AWKWARD_NAMES:
+        return root_name(pc, "b" in tonic)
+    return name
+
+
+def _root(chord: Chord, prefer_flats: bool, tonic: str | None) -> str:
+    return root_name_in_key(chord.root, tonic) if tonic else root_name(chord.root, prefer_flats)
+
+
+def format_symbol(chord: Chord | None, prefer_flats: bool = False, tonic: str | None = None) -> str:
     if chord is None:
         return "N.C."
-    root = root_name(chord.root, prefer_flats)
+    root = _root(chord, prefer_flats, tonic)
     s = root + QUALITY_SYMBOL[chord.quality]
     if chord.bass is not None:
         s += "/" + spell(root, chord.bass - chord.root)
     return s
 
 
-def note_names(chord: Chord, prefer_flats: bool = False) -> list[str]:
-    root = root_name(chord.root, prefer_flats)
+def note_names(chord: Chord, prefer_flats: bool = False, tonic: str | None = None) -> list[str]:
+    root = _root(chord, prefer_flats, tonic)
     return [spell(root, i) for i in QUALITY_INTERVALS[chord.quality]]
 
 
@@ -135,12 +153,12 @@ def midi_notes(chord: Chord) -> list[int]:
     return [bass] + [60 + chord.root + i for i in QUALITY_INTERVALS[chord.quality]]
 
 
-def render(label: str, transpose_by: int = 0, capo: int = 0,
-           simplify_chord: bool = False, prefer_flats: bool = False) -> str:
+def render(label: str, transpose_by: int = 0, capo: int = 0, simplify_chord: bool = False,
+           prefer_flats: bool = False, tonic: str | None = None) -> str:
     c = parse(label)
     if simplify_chord:
         c = simplify(c)
-    return format_symbol(transpose(c, transpose_by - capo), prefer_flats)
+    return format_symbol(transpose(c, transpose_by - capo), prefer_flats, tonic)
 
 
 def _parse_key(key_label: str) -> tuple[int, str]:
@@ -154,6 +172,12 @@ def key_prefers_flats(key_label: str, transpose_by: int = 0) -> bool:
     root, mode = _parse_key(key_label)
     root = (root + transpose_by) % 12
     return root in (_FLAT_MAJOR_ROOTS if mode == "maj" else _FLAT_MINOR_ROOTS)
+
+
+def key_spelling(key_label: str, transpose_by: int = 0) -> str:
+    """Tonic name of the (transposed) key, e.g. 'Db' for C major moved up 1."""
+    root, _ = _parse_key(key_label)
+    return root_name(root + transpose_by, key_prefers_flats(key_label, transpose_by))
 
 
 def format_key(key_label: str, transpose_by: int = 0) -> str:
