@@ -38,8 +38,9 @@ def analyze(video_id: str, work_dir: Path, options: Options, progress: ProgressF
     harmonic_y, bass_y, harmonic_path, separated = y, y, wav, False
 
     if options.mode == "accurate":
-        progress("separating", 15, "Separating vocals, drums and bass (the slow part)")
-        stems = separate.separate(wav, work_dir / "stems")
+        message = "Separating vocals, drums and bass (the slow part)"
+        progress("separating", 15, message)
+        stems = separate.separate(wav, work_dir / "stems", on_poll=lambda: progress("separating", 15, message))
         harmonic_y = separate.load_mix([stems["bass"], stems["other"]], SR)
         bass_y, _ = librosa.load(str(stems["bass"]), sr=SR, mono=True)
         harmonic_path = work_dir / "harmonic.wav"

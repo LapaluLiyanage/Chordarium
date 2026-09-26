@@ -45,6 +45,28 @@ def test_missing_btc_weights_warns_and_falls_back(tmp_path, monkeypatch):
     assert "setup_models.py" in t["warnings"][0]
 
 
+def test_cancel_reaches_running_separation(tmp_path, monkeypatch):
+    def fake_separate(wav, out_dir, device=None, on_poll=None):
+        on_poll()
+        raise AssertionError("separation should have been cancelled")
+
+    monkeypatch.setattr(pipeline.separate, "separate", fake_separate)
+    calls = []
+
+    def progress(state, pct, msg):
+        calls.append(state)
+        if calls.count("separating") > 1:
+            raise pipeline.Cancelled()
+
+    try:
+        analyze("vid00000001", tmp_path / "w", Options(mode="accurate", engine="template"), progress,
+                fetch_audio=fake_fetch)
+    except pipeline.Cancelled:
+        pass
+    else:
+        raise AssertionError("expected Cancelled")
+
+
 def test_progress_callback_can_cancel(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.beats, "detect_beats", fake_beats)
 
