@@ -45,6 +45,15 @@ describe('TrackerPage', () => {
     expect(screen.getByText('G# minor')).toBeInTheDocument()
   })
 
+  it('marks the hero chord low-confidence under the spec 70% threshold, not just 50%', async () => {
+    const song = makeSong()
+    song.timeline.segments[0] = { ...song.timeline.segments[0], confidence: 0.65 }
+    mocked.song.mockResolvedValue(song)
+    renderTracker()
+    const current = await screen.findByTestId('current-chord')
+    expect(current.querySelector('.cs')).toHaveClass('low-confidence')
+  })
+
   it('edits a chord through the editor', async () => {
     const edited = makeSong()
     edited.timeline.segments[1] = { ...edited.timeline.segments[1], label: 'F:maj', edited: true }

@@ -9,7 +9,7 @@ import { DiagramPanel } from '../components/DiagramPanel'
 import { ExportModal } from '../components/ExportModal'
 import { useViewSettings } from '../hooks/useViewSettings'
 import { useYouTubePlayer } from '../hooks/useYouTubePlayer'
-import { activeIndex, beatsUntil, upcomingIndex } from '../sync'
+import { activeIndex, beatsUntil, isLowConfidence, upcomingIndex } from '../sync'
 import { formatKey, keySpelling, parse, render, simplify, transpose } from '../theory/chord'
 import type { Song, Timeline } from '../types'
 
@@ -110,7 +110,7 @@ function Tracker({ song, onTimeline }: { song: Song; onTimeline(t: Timeline): vo
       <div className="tracker-top">
         <div className="player"><div id="yt-player" /></div>
         <ChordHero current={idx >= 0 ? symbols[idx] : null} next={next >= 0 ? symbols[next] : null} beatsToNext={beatsToNext}
-          lowConfidence={idx >= 0 && t.segments[idx].confidence < 0.5} />
+          lowConfidence={idx >= 0 && isLowConfidence(t.segments[idx].confidence)} />
       </div>
       <ChordLane segments={t.segments} symbols={symbols} beats={t.beats} downbeats={t.downbeats} duration={t.duration}
         time={player.time} editMode={editMode} onSeek={seek} onEdit={setEditing} />

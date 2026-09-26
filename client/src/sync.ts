@@ -1,6 +1,12 @@
 import type { Segment } from './types'
 
 export const PX_PER_SECOND = 120
+// Spec: "Dotted underline = low confidence (<70%)".
+export const LOW_CONFIDENCE_THRESHOLD = 0.7
+
+export function isLowConfidence(confidence: number): boolean {
+  return confidence < LOW_CONFIDENCE_THRESHOLD
+}
 
 function firstStartAfter(segments: Segment[], t: number): number {
   let lo = 0

@@ -29,6 +29,12 @@ describe('ChordLane', () => {
     expect(screen.getByRole('button', { name: 'D7/F#' })).toHaveClass('low')
   })
 
+  it('marks chords below the spec 70% threshold as low, not just below 50%', () => {
+    // TIMELINE's Bbmaj7 segment has confidence 0.6 — under 70% (spec), not under 50%.
+    renderLane()
+    expect(screen.getByRole('button', { name: 'Bbmaj7' })).toHaveClass('low')
+  })
+
   it('seeks on click, or opens the editor in edit mode', async () => {
     const user = userEvent.setup()
     const { onSeek } = renderLane()
@@ -42,5 +48,28 @@ describe('ChordLane', () => {
     await user.click(screen.getByRole('button', { name: 'Bbmaj7' }))
     expect(onEdit).toHaveBeenCalledWith(2)
     expect(onSeek).not.toHaveBeenCalled()
+  })
+
+  it('lets edit mode add a chord where the model found none', async () => {
+    const user = userEvent.setup()
+    const noChordSegments = [
+      { start: 0, end: 2, label: 'N', alt: null, confidence: 1, bass: null, edited: false },
+      ...TIMELINE.segments.slice(1),
+    ]
+    const noChordSymbols = ['N.C.', ...symbols.slice(1)]
+    const { onEdit } = renderLane({ segments: noChordSegments, symbols: noChordSymbols, editMode: true })
+    const placeholder = screen.getByRole('button', { name: /add a chord/i })
+    expect(placeholder).toHaveClass('empty')
+    await user.click(placeholder)
+    expect(onEdit).toHaveBeenCalledWith(0)
+  })
+
+  it('does not render a no-chord placeholder outside edit mode', () => {
+    const noChordSegments = [
+      { start: 0, end: 2, label: 'N', alt: null, confidence: 1, bass: null, edited: false },
+      ...TIMELINE.segments.slice(1),
+    ]
+    renderLane({ segments: noChordSegments, editMode: false })
+    expect(screen.queryByRole('button', { name: /add a chord/i })).not.toBeInTheDocument()
   })
 })

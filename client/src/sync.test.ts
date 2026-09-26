@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeIndex, beatsUntil, laneOffset, upcomingIndex } from './sync'
+import { activeIndex, beatsUntil, isLowConfidence, laneOffset, upcomingIndex } from './sync'
 import { TIMELINE } from './test/fixtures'
 
 const segs = TIMELINE.segments
@@ -41,5 +41,13 @@ describe('beatsUntil / laneOffset', () => {
   it('centres the playhead', () => {
     expect(laneOffset(0, 800)).toBe(400)
     expect(laneOffset(2, 800)).toBe(160)
+  })
+})
+
+describe('isLowConfidence', () => {
+  it('matches the spec: dotted underline below 70%', () => {
+    expect(isLowConfidence(0.69)).toBe(true)
+    expect(isLowConfidence(0.7)).toBe(false)
+    expect(isLowConfidence(0.8)).toBe(false)
   })
 })

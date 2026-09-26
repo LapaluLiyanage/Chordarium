@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PX_PER_SECOND, laneOffset } from '../sync'
+import { PX_PER_SECOND, isLowConfidence, laneOffset } from '../sync'
 import type { Segment } from '../types'
 
 interface Props {
@@ -39,11 +39,20 @@ export function ChordLane({ segments, symbols, beats, downbeats, duration, time,
         {beats.map((b) => <span key={`b${b}`} className="beat-tick" style={{ left: b * PX_PER_SECOND }} />)}
         {downbeats.map((d) => <span key={`d${d}`} className="bar-line" style={{ left: d * PX_PER_SECOND }} />)}
         {segments.map((s, i) => {
-          if (s.label === 'N') return null
+          if (s.label === 'N') {
+            if (!editMode) return null
+            return (
+              <button key={i} type="button" className="chip empty"
+                style={{ left: s.start * PX_PER_SECOND, width: Math.max((s.end - s.start) * PX_PER_SECOND - 4, 28) }}
+                title="Add a chord here" aria-label="Add a chord here" onClick={() => onEdit(i)}>
+                +
+              </button>
+            )
+          }
           const classes = ['chip']
           if (s.end <= time) classes.push('past')
           if (s.start <= time && time < s.end) classes.push('active')
-          if (s.confidence < 0.5) classes.push('low')
+          if (isLowConfidence(s.confidence)) classes.push('low')
           if (s.edited) classes.push('edited')
           return (
             <button key={i} type="button" className={classes.join(' ')}
