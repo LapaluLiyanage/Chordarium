@@ -4,7 +4,7 @@ Paste a YouTube link, get the song's chords — including 7ths, extensions, sus
 chords and inversions — synced to the video, editable, and exportable as a
 chord sheet (ChordPro, PDF, TXT, MIDI, JSON).
 
-**Status:** Phase 1 server (API) built; React client next. See
+**Status:** Phase 1 complete — local Flask API + React client. See
 [`docs/superpowers/specs/2026-09-26-chordarium-design.md`](docs/superpowers/specs/2026-09-26-chordarium-design.md).
 
 ## Stack
@@ -33,3 +33,19 @@ python -m server.app                # API on http://127.0.0.1:5000
 ```
 
 Requires ffmpeg on PATH.
+
+## Run the app (Phase 1)
+
+Terminal 1 — API:
+```powershell
+.venv\Scripts\activate
+python -m server.app
+```
+
+Terminal 2 — web client:
+```powershell
+cd client
+npm install
+npm run dev          # http://localhost:5173
+npm test             # client tests
+```
