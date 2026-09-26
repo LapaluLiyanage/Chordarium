@@ -6,8 +6,17 @@ import type { Job } from '../types'
 import { renderAt } from '../test/router'
 import { AnalyzingPage } from './AnalyzingPage'
 
-vi.mock('../api', () => ({ api: { job: vi.fn(), cancelJob: vi.fn() } }))
-import { api } from '../api'
+vi.mock('../api', () => {
+  class ApiError extends Error {
+    status: number
+    constructor(message: string, status: number) {
+      super(message)
+      this.status = status
+    }
+  }
+  return { api: { job: vi.fn(), cancelJob: vi.fn() }, ApiError }
+})
+import { api, ApiError } from '../api'
 const mocked = vi.mocked(api)
 
 const base: Job = {
@@ -60,6 +69,31 @@ describe('AnalyzingPage', () => {
     renderPage()
     await user.click(await screen.findByRole('button', { name: /cancel/i }))
     await waitFor(() => expect(mocked.cancelJob).toHaveBeenCalledWith('j1'))
+  })
+
+  it('survives a transient network failure and keeps polling', async () => {
+    mocked.job
+      .mockRejectedValueOnce(new Error('network blip'))
+      .mockResolvedValue({ ...base, state: 'chords', progress: 60, message: 'Recognizing chords' })
+    renderPage()
+    await waitFor(() => {
+      expect(screen.getByText('Recognizing chords', { selector: 'li' })).toHaveAttribute('data-status', 'active')
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('gives up after 3 consecutive failures', async () => {
+    mocked.job.mockRejectedValue(new Error('network blip'))
+    renderPage()
+    expect(await screen.findByRole('alert')).toHaveTextContent('network blip')
+    expect(mocked.job.mock.calls.length).toBe(3)
+  })
+
+  it('stops immediately on a 404 instead of retrying', async () => {
+    mocked.job.mockRejectedValue(new ApiError('Job not found', 404))
+    renderPage()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Job not found')
+    expect(mocked.job.mock.calls.length).toBe(1)
   })
 
   it('shows a cancelled message', async () => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api } from '../api'
+import { api, ApiError } from '../api'
 import type { Job, JobState } from '../types'
 
 const STEPS: [JobState, string][] = [
@@ -12,6 +12,7 @@ const STEPS: [JobState, string][] = [
   ['key', 'Estimating key'],
 ]
 const FINAL: JobState[] = ['done', 'failed', 'cancelled']
+const MAX_CONSECUTIVE_FAILURES = 3
 
 export function AnalyzingPage({ pollMs = 1000 }: { pollMs?: number }) {
   const { jobId = '' } = useParams()
@@ -22,10 +23,12 @@ export function AnalyzingPage({ pollMs = 1000 }: { pollMs?: number }) {
   useEffect(() => {
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | undefined
+    let consecutiveFailures = 0
     const tick = async () => {
       try {
         const j = await api.job(jobId)
         if (stopped) return
+        consecutiveFailures = 0
         setJob(j)
         if (j.state === 'done' && j.song_id) {
           navigate(`/songs/${j.song_id}`, { replace: true })
@@ -33,8 +36,13 @@ export function AnalyzingPage({ pollMs = 1000 }: { pollMs?: number }) {
         }
         if (FINAL.includes(j.state)) return
       } catch (e) {
-        if (!stopped) setError(e instanceof Error ? e.message : String(e))
-        return
+        if (stopped) return
+        const isNotFound = e instanceof ApiError && e.status === 404
+        consecutiveFailures += 1
+        if (isNotFound || consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+          setError(e instanceof Error ? e.message : String(e))
+          return
+        }
       }
       timer = setTimeout(tick, pollMs)
     }
