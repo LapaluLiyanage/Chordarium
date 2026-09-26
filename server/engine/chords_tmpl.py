@@ -11,6 +11,18 @@ ROOT_WEIGHT = 1.5
 P_STAY = 0.95
 BETA = 20.0
 SILENCE_RATIO = 0.02
+# Chord identity comes from C3 upward; the bass register only nudges ties (inversions
+# must not turn G/B into Bm). bass.py decides the actual slash bass later.
+TREBLE_FMIN = librosa.note_to_hz("C3")
+BASS_FMIN = librosa.note_to_hz("C1")
+BASS_MIX = 0.3
+
+
+def _chroma(y: np.ndarray, sr: int, hop: int) -> np.ndarray:
+    treble = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop, fmin=TREBLE_FMIN, n_octaves=5)
+    low = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop, fmin=BASS_FMIN, n_octaves=2)
+    n = min(treble.shape[1], low.shape[1])
+    return treble[:, :n] + BASS_MIX * low[:, :n]
 
 
 def build_templates() -> tuple[list[str], np.ndarray]:
@@ -50,8 +62,8 @@ def viterbi(log_emit: np.ndarray, p_stay: float = P_STAY) -> np.ndarray:
 
 def recognize(y: np.ndarray, sr: int, hop: int = HOP) -> list[dict]:
     labels, templates = build_templates()
-    chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=hop)
-    chroma = chroma / (np.linalg.norm(chroma, axis=0, keepdims=True) + 1e-9)
+    chroma = _chroma(y, sr, hop)
+    chroma = chroma /(np.linalg.norm(chroma, axis=0, keepdims=True) + 1e-9)
     scores = templates @ chroma
     rms = librosa.feature.rms(y=y, frame_length=hop * 2, hop_length=hop)[0]
     n = min(scores.shape[1], len(rms))

@@ -31,6 +31,13 @@ def test_recognizes_advanced_progression():
     assert label_at(segs, 7.0) == "D:sus4"
 
 
+def test_inverted_bass_does_not_change_chord_identity():
+    y = progression([([7, 11, 2], 2.0, 11), ([0, 4, 7], 2.0, 4)])   # G/B, C/E
+    segs = chords_tmpl.recognize(y, SR)
+    assert label_at(segs, 1.0) == "G:maj"
+    assert label_at(segs, 3.0) == "C:maj"
+
+
 def test_silence_is_no_chord_and_fields_are_sane():
     y = np.concatenate([silence(1.5), chord_audio([0, 4, 7], 2.0, 0)])
     segs = chords_tmpl.recognize(y, SR)
