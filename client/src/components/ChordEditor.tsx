@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useModalA11y } from '../hooks/useModalA11y'
 import {
   QUALITIES, QUALITY_SYMBOL, formatSymbol, parse, rootNameInKey, simplify, toHarte, transpose,
 } from '../theory/chord'
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function ChordEditor({ segment, shift, tonic, onApply, onClose }: Props) {
+  const modalRef = useModalA11y<HTMLDivElement>(onClose)
   const shown = transpose(parse(segment.label), shift)
   const [root, setRoot] = useState(shown?.root ?? 0)
   const [quality, setQuality] = useState(shown?.quality ?? 'maj')
@@ -33,7 +35,7 @@ export function ChordEditor({ segment, shift, tonic, onApply, onClose }: Props) 
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label="Edit chord" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Edit chord" onClick={(e) => e.stopPropagation()}>
         <h2><ChordSymbol symbol={display(segment.label)} /></h2>
         {suggestions.length > 0 && (
           <div className="suggestions" role="group" aria-label="Suggestions">

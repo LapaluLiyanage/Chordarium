@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { DEFAULT_VIEW } from '../hooks/useViewSettings'
@@ -20,6 +20,13 @@ describe('ExportModal', () => {
     await user.selectOptions(screen.getByLabelText(/bars per row/i), '8')
     expect(screen.getByRole('link', { name: /download/i }))
       .toHaveAttribute('href', '/api/songs/s1/export?fmt=chordpro&transpose=0&capo=0&simplify=1&bars_per_row=8')
+  })
+
+  it('closes on Escape', () => {
+    const onClose = vi.fn()
+    render(<ExportModal songId="s1" settings={DEFAULT_VIEW} onClose={onClose} />)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
   })
 
   it('closes', async () => {

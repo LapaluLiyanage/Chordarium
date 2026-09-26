@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { exportUrl } from '../api'
+import { useModalA11y } from '../hooks/useModalA11y'
 import type { ViewSettings } from '../hooks/useViewSettings'
 import type { ExportFormat } from '../types'
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function ExportModal({ songId, settings, onClose }: Props) {
+  const modalRef = useModalA11y<HTMLDivElement>(onClose)
   const [fmt, setFmt] = useState<ExportFormat>('pdf')
   const [includeView, setIncludeView] = useState(true)
   const [simplify, setSimplify] = useState(settings.simplify)
@@ -31,7 +33,7 @@ export function ExportModal({ songId, settings, onClose }: Props) {
   })
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label="Export chord sheet" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Export chord sheet" onClick={(e) => e.stopPropagation()}>
         <p className="eyebrow">Format</p>
         <div className="formats" role="radiogroup" aria-label="Format">
           {FORMATS.map((f) => (

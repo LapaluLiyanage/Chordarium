@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Segment } from '../types'
@@ -42,6 +42,13 @@ describe('ChordEditor', () => {
     await user.selectOptions(screen.getByLabelText('Bass'), '')
     await user.click(screen.getByRole('button', { name: /^apply$/i }))
     expect(onApply).toHaveBeenCalledWith('C:maj', false)
+  })
+
+  it('closes on Escape', () => {
+    const onClose = vi.fn()
+    render(<ChordEditor segment={seg} shift={0} tonic="G" onApply={vi.fn()} onClose={onClose} />)
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
   })
 
   it('can mark no chord for every matching chord', async () => {
